@@ -7,7 +7,7 @@ on:
 jobs:
   test-ios:
     runs-on: macos-latest
-    environment: Production
+#    environment: Production
     steps:
     - name: "List all simulators"
       run: "xcrun xctrace list devices"
