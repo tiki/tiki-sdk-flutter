@@ -2,53 +2,69 @@ name: Publish Flutter
 
 on:
   push:
-    tags:
-      - '*.*.*'
+    branches: [ update_flutter_publish_action ]
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  test-ios:
+    runs-on: macos-latest
     environment: Production
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v2
+    - name: "List all simulators"
+      run: "xcrun xctrace list devices"
 
-      - name: 'Setup Dart'
-        uses: dart-lang/setup-dart@v1
+    - name: "Start Simulator"
+      run: |
+        UDID=$(xcrun xctrace list devices | grep "^$iPhone 13 Simulator (15.2)" | awk '{gsub(/[()]/,""); print $NF}')
+        echo $UDID
+        xcrun simctl boot "${UDID:?No Simulator with this name found}"
+
+    - name: 'Checkout'
+      uses: actions/checkout@v2
+
+    - name: 'Setup Dart'
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: 2.18.2
+
+    - name: 'Setup Flutter'
+      uses: subosito/flutter-action@v1
+      with:
+        flutter-version: '3.3.4'
+
+    - name: 'Run ios integration tests'
+      run: |
+        flutter test integration_test --verbose
+
+    - name: 'Run android integration tests'
+        uses: reactivecircus/android-emulator-runner@v2
         with:
-          sdk: 2.18.2
+          api-level: 31
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter test integration_test --verbose
 
-      - name: 'Setup Flutter'
-        uses: subosito/flutter-action@v1
-        with:
-          flutter-version: '3.3.4'
+    - name: 'Setup credentials'
+      run: |
+        mkdir $XDG_CONFIG_HOME/dart
+        echo '${{ secrets.PUB_DEV_CREDENTIALS }}' > "$XDG_CONFIG_HOME/dart/pub-credentials.json"
 
-      - name: 'Run integration tests'
-        run: |
-          flutter test integration_test
-
-      - name: 'Setup credentials'
-        run: |
-          mkdir $XDG_CONFIG_HOME/dart
-          echo '${{ secrets.PUB_DEV_CREDENTIALS }}' > "$XDG_CONFIG_HOME/dart/pub-credentials.json"
-
-      - name: 'Publish SDK'
-        run: |
-          flutter pub publish -f
-
-  docs:
-    runs-on: ubuntu-latest
-    needs: [ publish ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.1.1
-
-      - name: Guide
-        uses: readmeio/rdme@8.3.0
-        with:
-          rdme: docs doc/guide --key=${{ secrets.README_API_KEY }}
-
-      - name: Ref
-        uses: readmeio/rdme@8.3.0
-        with:
-          rdme: docs doc/ref --key=${{ secrets.README_API_KEY }}
+    - name: 'Publish SDK'
+      run: |
+        flutter pub publish --dry-run
+#
+#  docs:
+#    runs-on: ubuntu-latest
+#    needs: [ publish ]
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2.1.1
+#
+#      - name: Guide
+#        uses: readmeio/rdme@8.3.0
+#        with:
+#          rdme: docs doc/guide --key=${{ secrets.README_API_KEY }}
+#
+#      - name: Ref
+#        uses: readmeio/rdme@8.3.0
+#        with:
+#          rdme: docs doc/ref --key=${{ secrets.README_API_KEY }}
