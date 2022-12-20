@@ -44,7 +44,7 @@ jobs:
       - name: 'Add embed script in Xcode Project Build phases'
         run: |
           cd tiki-sdk-flutter/.ios
-          perl -i -p0e 's/shellScript = "\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" build";/shellScript = "\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" build\\n\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" embed\\n";/s' ./.ios/Runner.xcodeproj/project.pbxproj
+          perl -i -p0e 's/shellScript = "\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" build";/shellScript = "\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" build\\n\/bin\/sh \\"\$FLUTTER_ROOT\/packages\/flutter_tools\/bin\/xcode_backend\.sh\\" embed\\n";/s' ./Runner.xcodeproj/project.pbxproj
 
       - name: "Build Frameworks"
         run: |
